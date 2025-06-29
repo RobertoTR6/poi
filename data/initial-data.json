@@ -1,0 +1,81 @@
+{
+  "unidades": [
+    { "id": "u1", "codigo": "01", "nombre": "DEPARTAMENTO DE MEDICINA" },
+    { "id": "u2", "codigo": "02", "nombre": "DEPARTAMENTO DE CIRUGÍA" },
+    { "id": "u3", "codigo": "03", "nombre": "UNIDAD DE SOPORTE AL DIAGNÓSTICO Y TRATAMIENTO" }
+  ],
+  "subunidades": [
+    { "id": "su1", "unidadCodigo": "03", "codigo": "03.01", "nombre": "SUBUNIDAD DE SOPORTE AL DIAGNÓSTICO" },
+    { "id": "su2", "unidadCodigo": "03", "codigo": "03.02", "nombre": "SUBUNIDAD DE SOPORTE AL TRATAMIENTO" }
+  ],
+  "centrosDeCosto": [
+    { "id": "cc1", "subunidadCodigo": "03.02", "codigo": "03.02.02", "nombre": "FARMACIA" }
+  ],
+  "users": [
+    { "id": "user-1", "nombre": "Administrador General", "usuario": "admin@insnsb.gob.pe", "clave": "admin", "centroCostoCodigo": "03.02.02", "permisos": { "configuracion": "editar", "planeamiento": "editar", "cmn": "editar", "evaluacion": "editar" } },
+    { "id": "user-2", "nombre": "Carlos Zambrano Trinidad", "usuario": "czambrano@insnsb.gob.pe", "clave": "123456", "centroCostoCodigo": "03.02.02", "permisos": { "configuracion": "visualizar", "planeamiento": "editar", "cmn": null, "evaluacion": "visualizar" } }
+  ],
+  "planes": [
+    { "id": "pei-1", "nombre": "PEI 2019 - 2025" }
+  ],
+  "oeis": [
+    { "id":"oei-1", "planId": "pei-1", "codigo": "04", "nombre": "FORTALECER LA GESTIÓN DEL RIESGO Y DEFENSA ANTE EMERGENCIAS Y DESASTRES" }
+  ],
+  "aeis": [
+    { "id":"aei-1", "oeiCodigo": "04", "codigo": "04.01", "nombre": "SISTEMA NACIONAL DE GESTIÓN DEL RIESGO DE DESASTRES Y DEFENSA NACIONAL EN SALUD IMPLEMENTADO." }
+  ],
+  "unidadesDeMedida": [
+    { "id": "um1", "codigo": "070", "nombre": "RECETA" },
+    { "id": "um2", "codigo": "071", "nombre": "KILOGRAMO" }
+  ],
+  "cadenasPPR": [
+    {
+      "id": "ppr-1",
+      "categoriaCodigo": "1001",
+      "categoriaNombre": "PRODUCTOS ESPECÍFICOS PARA DESARROLLO INFANTIL TEMPRANO",
+      "productoCodigo": "3000877",
+      "productoNombre": "Atención de enfermedades diarreicas agudas e infecciones respiratorias agudas con complicaciones",
+      "actividadCodigo": "5000029",
+      "actividadNombre": "Atender a niños con diagnóstico de infecciones respiratorias agudas con complicaciones",
+      "subproductoCodigo": "3331301",
+      "subproductoNombre": "Infecciones respiratorias agudas con complicaciones",
+      "traz": true
+    }
+  ],
+
+    "cadenas9001": [
+    {
+      "id": "c9001-1",
+      "categoriaCodigo": "9001",
+      "categoriaNombre": "ACCIONES CENTRALES",
+      "productoCodigo": "3999999",
+      "productoNombre": "SIN PRODUCTO",
+      "actividadCodigo": "5000001",
+      "actividadNombre": "PLANEAMIENTO Y PRESUPUESTO"
+    },
+    {
+      "id": "c9001-2",
+      "categoriaCodigo": "9002",
+      "categoriaNombre": "ASIGNACIONES PRESUPUESTARIAS QUE NO RESULTAN EN PRODUCTOS",
+      "productoCodigo": "3999999",
+      "productoNombre": "SIN PRODUCTO",
+      "actividadCodigo": "5000996",
+      "actividadNombre": "TRANSFERENCIAS INTERNAS"
+    }
+  ],
+  "actividadesOperativas": [
+    {
+      "id": "aoi-1",
+      "codigo": "AOI0759",
+      "accionEstrategicaId": "aei-1",
+      "pertenecePrograma": true,
+      "fuenteCadenaId": "ppr-1",
+      "unidadMedidaId": "um1",
+      "programado": {
+        "ene": 1, "feb": 0, "mar": 0, "abr": 1, "may": 0, "jun": 0,
+        "jul": 0, "ago": 1, "set": 0, "oct": 1, "nov": 0, "dic": 0
+      }
+    }
+  ]
+
+}
