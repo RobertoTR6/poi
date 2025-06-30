@@ -115,8 +115,9 @@ body {
     background-color: #fcfcfc; 
 }
 
+/* Corrección de altura para mostrar todos los sub-items del menú */
 .module-toggle.open + .submenu { 
-    max-height: 200px; 
+    max-height: 400px;
 }
 
 .submenu li a { 
@@ -262,10 +263,18 @@ td, th {
     font-size: 0.9rem;
 }
 
-td:last-child { 
-    display: flex; 
-    gap: 0.5rem; 
+/* ----- INICIO DE LA CORRECCIÓN DE ALINEACIÓN DEFINITIVA ----- */
+th:last-child,
+td:last-child {
+    text-align: center;
 }
+
+.action-buttons {
+    display: inline-flex; 
+    gap: 0.5rem;
+}
+/* ----- FIN DE LA CORRECCIÓN DE ALINEACIÓN DEFINITIVA ----- */
+
 
 /* ====================== */
 /* BUTTONS & INPUTS       */
@@ -491,6 +500,7 @@ input[type="radio"], input[type="checkbox"] { accent-color: var(--primary-color)
     border-radius: 4px;
     font-size: 0.8rem;
     color: var(--text-light);
+    flex-shrink: 0;
 }
 
 .ao-actions {
@@ -530,8 +540,6 @@ input[type="radio"], input[type="checkbox"] { accent-color: var(--primary-color)
     padding: 0.5rem;
 }
 
-
-/* Layout para el formulario del Modal de AO */
 #form-actividad-operativa .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -552,8 +560,6 @@ input[type="radio"], input[type="checkbox"] { accent-color: var(--primary-color)
     font-weight: 500;
 }
 
-/* --- ESTILOS AÑADIDOS PARA LA PROGRAMACIÓN --- */
-
 .programado-input {
     width: 60px;
     text-align: center;
@@ -562,7 +568,6 @@ input[type="radio"], input[type="checkbox"] { accent-color: var(--primary-color)
     padding: 0.25rem;
     font-size: 0.9rem;
 }
-/* Ocultar las flechas de los input de tipo número */
 .programado-input::-webkit-outer-spin-button,
 .programado-input::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -576,4 +581,113 @@ input[type="radio"], input[type="checkbox"] { accent-color: var(--primary-color)
     padding-top: 1rem;
     display: flex;
     justify-content: flex-end;
+}
+
+
+/* ======================== */
+/* ETIQUETA DE ESTADO AO    */
+/* ======================== */
+.ao-status-tag {
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-left: auto;
+    margin-right: 1rem;
+    border: 1px solid transparent;
+}
+
+.ao-status-tag.trazador {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    border-color: #badbcc;
+}
+
+.ao-status-tag.no-trazador {
+    background-color: #e9ecef;
+    color: var(--text-light);
+    border-color: #dee2e6;
+}
+
+.ao-unidad-medida {
+    margin-left: 0;
+}
+
+.ao-status-tag + .ao-unidad-medida {
+    margin-left: 0;
+}
+
+.ao-header .ao-nombre + .ao-unidad-medida {
+    margin-left: auto;
+}
+
+/* ======================== */
+/* NOTIFICATION STYLES      */
+/* ======================== */
+
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 2000; /* Muy alto para estar sobre todo */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 320px;
+}
+
+.toast {
+    background-color: #333;
+    color: white;
+    padding: 1rem;
+    border-radius: 5px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.4s cubic-bezier(0.215, 0.610, 0.355, 1); /* Transición suave */
+    position: relative;
+    overflow: hidden;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast i {
+    font-size: 1.2rem;
+}
+
+.toast.success { background-color: #28a745; }
+.toast.error { background-color: var(--danger-color); }
+.toast.info { background-color: var(--primary-color); }
+
+.toast-close-btn {
+    position: absolute;
+    top: 2px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 300;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+.toast-close-btn:hover {
+    opacity: 1;
+}
+
+#subproducto-container input[type="text"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    box-sizing: border-box;
 }

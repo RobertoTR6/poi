@@ -17,10 +17,8 @@ import { init as initActividadesOperativas } from './pages/actividades-operativa
 // --- 2. Verificar la sesión del usuario al cargar el script ---
 const currentUser = getCurrentUser();
 if (!currentUser) {
-    // Si no hay usuario, redirigir inmediatamente a la página de login
     window.location.href = 'login.html';
 } else {
-    // Si hay un usuario, iniciar la aplicación principal
     main();
 }
 
@@ -30,7 +28,6 @@ if (!currentUser) {
 async function main() {
     /**
      * Función helper para mostrar los datos del usuario en la cabecera.
-     * Es más eficiente llamarla una sola vez aquí que en cada renderizado de tabla.
      * @param {object} user - El objeto del usuario actual.
      */
     const displayUserProfile = (user) => {
@@ -43,17 +40,12 @@ async function main() {
                 </button>
             </div>
         `;
-        // Selecciona todos los contenedores de perfil (uno por cada página) y les inyecta el HTML.
         document.querySelectorAll('.user-profile').forEach(p => p.innerHTML = userProfileHTML);
     };
 
-    // Es crucial inicializar el servicio de datos primero para que los datos estén listos
     await dataService.init();
-
-    // Mostramos la información del perfil del usuario una sola vez al cargar la aplicación.
     displayUserProfile(currentUser);
 
-    // --- 3. Mapear los IDs de las páginas a sus funciones de inicialización ---
     const pageControllers = {
         'page-registro-unidad': initUnidades,
         'page-registro-subunidad': initSubunidades,
@@ -67,10 +59,6 @@ async function main() {
         'page-actividades-operativas': initActividadesOperativas,
     };
     
-    /**
-     * Activa una página: la muestra y ejecuta su lógica de inicialización si es la primera vez.
-     * @param {string} pageId - El ID del elemento <main> de la página a mostrar.
-     */
     const activatePage = (pageId) => {
         if (!pageId || !pageControllers[pageId]) {
             console.error(`Error: No se encontró un controlador para la página '${pageId}'.`);
@@ -90,6 +78,22 @@ async function main() {
         }
     };
 
+    // --- INICIO DE LA SECCIÓN DE DEPURACIÓN ---
+
+    // 1. Mensaje en consola para verificar el objeto de permisos.
+    console.log("Verificando permisos del usuario antes de construir el menú:", currentUser.permisos);
+
+    // 2. Alerta de seguridad si el objeto de permisos no existe o está vacío.
+    if (!currentUser.permisos || Object.keys(currentUser.permisos).length === 0) {
+        alert(
+            "¡ALERTA DE DEPURACIÓN!\n\nEl usuario actual NO tiene un objeto de 'permisos' válido. " +
+            "Esto es la causa más probable de que el menú no se muestre correctamente.\n\n" +
+            "SOLUCIÓN: Por favor, borre los datos de la aplicación del 'Local Storage' de su navegador y vuelva a iniciar sesión."
+        );
+    }
+
+    // --- FIN DE LA SECCIÓN DE DEPURACIÓN ---
+
     // --- 5. Construir la navegación y obtener la primera página disponible ---
     const firstPage = buildNav(currentUser, activatePage);
 
@@ -105,25 +109,17 @@ async function main() {
     }
     
     // --- 6. Añadir un listener global para la UI del perfil y el logout ---
-    // Usaremos delegación de eventos en el contenedor principal de la app para manejar clics.
     document.querySelector('.app-container').addEventListener('click', (e) => {
         const userProfile = e.target.closest('.user-profile');
-        
-        // Primero, manejamos el clic en el botón de logout, ya que es la acción más específica.
         if (e.target.closest('.logoutBtn')) {
             logout();
-            return; // Detiene la ejecución aquí.
+            return;
         }
-
-        // Ahora, manejamos la visibilidad del menú desplegable.
         const dropdown = document.querySelector('.user-dropdown');
-        
         if (userProfile) {
-            // Si el clic fue DENTRO del área del perfil, activamos/desactivamos el menú.
             userProfile.classList.toggle('open');
             dropdown?.classList.toggle('active');
         } else {
-            // Si el clic fue en CUALQUIER OTRO LADO, cerramos el menú.
             document.querySelector('.user-profile')?.classList.remove('open');
             dropdown?.classList.remove('active');
         }

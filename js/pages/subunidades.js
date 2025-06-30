@@ -15,11 +15,24 @@ export function init() {
         formId: 'form-subunidad',
         modalTitleId: 'modalSubunidadTitle',
         modalTitles: { create: 'Registrar Subunidad', edit: 'Modificar Subunidad' },
+        uniqueField: 'codigo',
 
+        // --- ESTA ES LA FUNCIÓN CORREGIDA ---
         renderRow: async (item) => {
             const u = await dataService.getUnidadPorCodigo(item.unidadCodigo);
-            return `<td>${u?.nombre ?? 'Unidad no encontrada'}</td><td>${item.codigo}</td><td>${item.nombre}</td>`;
+            return `
+                <td>${u?.nombre ?? 'Unidad no encontrada'}</td>
+                <td>${item.codigo}</td>
+                <td>${item.nombre}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-info btn-modify" title="Modificar"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="btn btn-danger btn-delete" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </td>
+            `;
         },
+        // --- FIN DE LA CORRECCIÓN ---
 
         onBeforeOpenModal: async (form) => {
             const sel = form.elements.unidadCodigo;
@@ -34,8 +47,7 @@ export function init() {
             form.elements.nombre.value = item.nombre;
         },
 
-        readForm: (form, item) => ({
-            id: item?.id,
+        readForm: (form) => ({
             unidadCodigo: form.elements.unidadCodigo.value,
             codigo: form.elements.codigo.value.trim(),
             nombre: form.elements.nombre.value.trim()

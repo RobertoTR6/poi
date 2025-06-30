@@ -1,31 +1,46 @@
 import { dataService } from '../modules/data.js';
+import { notifications } from '../modules/notifications.js';
 
 let allActividades = [];
 let editMode = false;
 let currentEditingId = null;
 let activeChainData = [];
 
-// --- CAMBIO CLAVE: MODIFICAMOS RENDERACTIVIDADES PARA QUE GENERE INPUTS ---
+// =======================================================
+// LÓGICA DE RENDERIZADO Y VISUALIZACIÓN
+// =======================================================
+
+/**
+ * Renderiza la lista de actividades operativas en el contenedor principal.
+ * @param {HTMLElement} container El elemento donde se renderizará la lista.
+ */
 async function renderActividades(container) {
     if (!container) return;
     const searchTerm = document.getElementById('searchAO')?.value.toLowerCase() || '';
+    
     const filteredData = allActividades.filter(ao => {
-        const aoNombre = (ao.fuenteCadena?.subproductoNombre || ao.fuenteCadena?.actividadNombre || '').toLowerCase();
+        // El nombre a buscar ahora prioriza el nombre manual, luego el de subproducto, y finalmente el de actividad.
+        const aoNombre = (ao.nombreActividad || ao.fuenteCadena?.subproductoNombre || ao.fuenteCadena?.actividadNombre || '').toLowerCase();
         return ao.codigo.toLowerCase().includes(searchTerm) || aoNombre.includes(searchTerm);
     });
+
     if (filteredData.length === 0) {
         container.innerHTML = '<p>No se encontraron actividades operativas.</p>';
         return;
     }
+
     const html = filteredData.map(ao => {
-        const totalProgramado = Object.values(ao.programado).reduce((sum, val) => sum + Number(val), 0);
-        const aoNombre = ao.fuenteCadena?.subproductoNombre || ao.fuenteCadena?.actividadNombre || 'Nombre no disponible';
-        
-        // --- CAMBIO CLAVE: GENERAMOS LOS INPUTS EN LUGAR DE TEXTO ESTÁTICO ---
-        const monthInputsHTML = Object.entries(ao.programado).map(([key, value]) => `
-            <td>
-                <input type="number" class="programado-input" data-month="${key}" value="${value || 0}" min="0">
-            </td>
+        const totalProgramado = Object.values(ao.programado || {}).reduce((sum, val) => sum + Number(val), 0);
+        const aoNombre = ao.nombreActividad || ao.fuenteCadena?.subproductoNombre || ao.fuenteCadena?.actividadNombre || 'Nombre no disponible';
+        let trazadorHtml = '';
+        if (ao.pertenecePrograma && typeof ao.fuenteCadena?.traz !== 'undefined') {
+            const esTrazador = ao.fuenteCadena.traz;
+            const texto = esTrazador ? 'Trazador' : 'No Trazador';
+            const claseCss = esTrazador ? 'trazador' : 'no-trazador';
+            trazadorHtml = `<span class="ao-status-tag ${claseCss}">${texto}</span>`;
+        }
+        const monthInputsHTML = Object.entries(ao.programado || {}).map(([key, value]) => `
+            <td><input type="number" class="programado-input" data-month="${key}" value="${value || 0}" min="0"></td>
         `).join('');
 
         return `
@@ -34,6 +49,7 @@ async function renderActividades(container) {
                     <button class="ao-toggle-btn"><i class="fas fa-plus"></i></button>
                     <span class="ao-codigo">${ao.codigo}</span>
                     <span class="ao-nombre">${aoNombre}</span>
+                    ${trazadorHtml}
                     <span class="ao-unidad-medida">${ao.unidadMedida?.nombre || ''}</span>
                     <div class="ao-actions">
                         <button class="btn-modify-ao"><i class="fas fa-pencil-alt"></i> Modificar</button>
@@ -46,14 +62,9 @@ async function renderActividades(container) {
                             <tr><th>Mes</th><th>ENE</th><th>FEB</th><th>MAR</th><th>ABR</th><th>MAY</th><th>JUN</th><th>JUL</th><th>AGO</th><th>SET</th><th>OCT</th><th>NOV</th><th>DIC</th><th>TOTAL</th></tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>Programado</td>
-                                ${monthInputsHTML} <!-- Aquí usamos la nueva variable con los inputs -->
-                                <td class="total-programado">${totalProgramado}</td>
-                            </tr>
+                            <tr><td>Programado</td>${monthInputsHTML}<td class="total-programado">${totalProgramado}</td></tr>
                         </tbody>
                     </table>
-                    <!-- --- CAMBIO CLAVE: AÑADIMOS EL BOTÓN DE GUARDAR --- -->
                     <div class="programacion-footer">
                         <button class="btn btn-primary btn-save-programacion">Guardar Programación</button>
                     </div>
@@ -63,157 +74,231 @@ async function renderActividades(container) {
     container.innerHTML = html;
 }
 
-// ... El resto de funciones (populate, openModal, etc.) no necesitan cambios y se mantienen igual.
-function populateCategorias(form) { const [categoriaSelect, productoSelect, actividadSelect, subproductoSelect] = [form.elements.categoria, form.elements.producto, form.elements.actividad, form.elements.fuenteCadenaId]; [categoriaSelect, productoSelect, actividadSelect, subproductoSelect].forEach(sel => sel.innerHTML = '<option value="">Seleccione...</option>'); const uniqueCategories = [...new Map(activeChainData.map(item => [item.categoriaCodigo, {codigo: item.categoriaCodigo, nombre: item.categoriaNombre}])).values()]; uniqueCategories.forEach(cat => categoriaSelect.add(new Option(`${cat.codigo} - ${cat.nombre}`, cat.codigo))); }
-function populateProductos(form) { const [productoSelect, actividadSelect, subproductoSelect] = [form.elements.producto, form.elements.actividad, form.elements.fuenteCadenaId]; productoSelect.innerHTML = '<option value="">Seleccione...</option>'; actividadSelect.innerHTML = '<option value="">Seleccione...</option>'; subproductoSelect.innerHTML = '<option value="">Seleccione...</option>'; const selectedCategoria = form.elements.categoria.value; if (!selectedCategoria) return; const filtered = activeChainData.filter(item => item.categoriaCodigo === selectedCategoria); const uniqueProducts = [...new Map(filtered.map(item => [item.productoCodigo, {codigo: item.productoCodigo, nombre: item.productoNombre}])).values()]; uniqueProducts.forEach(prod => productoSelect.add(new Option(`${prod.codigo} - ${prod.nombre}`, prod.codigo))); }
-function populateActividades(form) { const [actividadSelect, subproductoSelect] = [form.elements.actividad, form.elements.fuenteCadenaId]; actividadSelect.innerHTML = '<option value="">Seleccione...</option>'; subproductoSelect.innerHTML = '<option value="">Seleccione...</option>'; const [selectedCategoria, selectedProducto] = [form.elements.categoria.value, form.elements.producto.value]; if (!selectedProducto) return; const filtered = activeChainData.filter(item => item.categoriaCodigo === selectedCategoria && item.productoCodigo === selectedProducto); const uniqueActividades = [...new Map(filtered.map(item => [item.actividadCodigo, {codigo: item.actividadCodigo, nombre: item.actividadNombre}])).values()]; uniqueActividades.forEach(act => actividadSelect.add(new Option(`${act.codigo} - ${act.nombre}`, act.codigo))); }
-function populateSubproductos(form) { const subproductoSelect = form.elements.fuenteCadenaId; subproductoSelect.innerHTML = '<option value="">Seleccione...</option>'; const selectedActividad = form.elements.actividad.value; if (!selectedActividad) return; const filtered = activeChainData.filter(item => item.actividadCodigo === selectedActividad); filtered.forEach(item => subproductoSelect.add(new Option(item.subproductoNombre || item.actividadNombre, item.id))); }
-async function openModalFor(form, modal, id = null) {
-    form.reset();
-    document.getElementById('fieldset-fuente-datos').disabled = true;
-    if (id) {
-        editMode = true; currentEditingId = id;
-        document.getElementById('modalAOTitle').textContent = 'Modificar Actividad Operativa';
-        const ao = allActividades.find(a => a.id === id);
-        if (ao) {
-            form.elements.codigo.value = ao.codigo; form.elements.accionEstrategicaId.value = ao.accionEstrategicaId; form.elements.unidadMedidaId.value = ao.unidadMedidaId;
-            const radio = ao.pertenecePrograma ? form.elements.pertenecePrograma[0] : form.elements.pertenecePrograma[1];
-            radio.checked = true;
-            const sourceCollection = ao.pertenecePrograma ? 'cadenasPPR' : 'cadenas9001';
-            activeChainData = await dataService.getAll(sourceCollection);
-            document.getElementById('fieldset-fuente-datos').disabled = false;
-            populateCategorias(form); form.elements.categoria.value = ao.fuenteCadena.categoriaCodigo;
-            populateProductos(form); form.elements.producto.value = ao.fuenteCadena.productoCodigo;
-            populateActividades(form); form.elements.actividad.value = ao.fuenteCadena.actividadCodigo;
-            populateSubproductos(form); form.elements.fuenteCadenaId.value = ao.fuenteCadenaId;
-        }
-    } else {
-        editMode = false; currentEditingId = null;
-        document.getElementById('modalAOTitle').textContent = 'Registrar Actividad Operativa';
-        const nextId = (await dataService.getAll('actividadesOperativas')).length + 759;
-        form.elements.codigo.value = `AOI${nextId}`;
-    }
-    modal.style.display = 'flex';
-}
+/**
+ * Carga todos los datos necesarios y luego renderiza la vista.
+ * @param {HTMLElement} container El elemento donde se renderizará la lista.
+ */
 async function loadAndRender(container) {
     const [actividades, ppr, c9001, aeis, um] = await Promise.all([
         dataService.getAll('actividadesOperativas'), dataService.getAll('cadenasPPR'), dataService.getAll('cadenas9001'),
         dataService.getAll('aeis'), dataService.getAll('unidadesDeMedida')
     ]);
-    allActividades = actividades.map(ao => ({ ...ao, accionEstrategica: aeis.find(a => a.id === ao.accionEstrategicaId), unidadMedida: um.find(u => u.id === ao.unidadMedidaId), fuenteCadena: ao.pertenecePrograma ? ppr.find(p => p.id === ao.fuenteCadenaId) : c9001.find(c => c.id === ao.fuenteCadenaId) }));
+    const pprMap = new Map(ppr.map(p => [p.id, p]));
+    const c9001Map = new Map(c9001.map(c => [c.id, c]));
+    allActividades = actividades.map(ao => ({
+        ...ao,
+        accionEstrategica: aeis.find(a => a.id === ao.accionEstrategicaId),
+        unidadMedida: um.find(u => u.id === ao.unidadMedidaId),
+        fuenteCadena: ao.pertenecePrograma ? pprMap.get(ao.fuenteCadenaId) : c9001Map.get(ao.fuenteCadenaId)
+    }));
     await renderActividades(container);
 }
 
+// =======================================================
+// LÓGICA DEL MODAL Y FORMULARIO
+// =======================================================
+
+// --- Funciones Helper para popular selects en cascada ---
+function populateCategorias(form, data) { const [sel, p, a] = [form.elements.categoria, form.elements.producto, form.elements.actividad]; [sel, p, a].forEach(s => s.innerHTML = '<option value="">Seleccione...</option>'); const unique = [...new Map(data.map(item => [item.categoriaCodigo, {codigo: item.categoriaCodigo, nombre: item.categoriaNombre}])).values()]; unique.forEach(cat => sel.add(new Option(`${cat.codigo} - ${cat.nombre}`, cat.codigo))); }
+function populateProductos(form, data) { const [sel, a] = [form.elements.producto, form.elements.actividad]; [sel, a].forEach(s => s.innerHTML = '<option value="">Seleccione...</option>'); const cat = form.elements.categoria.value; if (!cat) return; const filtered = data.filter(item => item.categoriaCodigo === cat); const unique = [...new Map(filtered.map(item => [item.productoCodigo, {codigo: item.productoCodigo, nombre: item.productoNombre}])).values()]; unique.forEach(prod => sel.add(new Option(`${prod.codigo} - ${prod.nombre}`, prod.codigo))); }
+function populateActividades(form, data) { const sel = form.elements.actividad; sel.innerHTML = '<option value="">Seleccione...</option>'; const [cat, prod] = [form.elements.categoria.value, form.elements.producto.value]; if (!prod) return; const filtered = data.filter(item => item.categoriaCodigo === cat && item.productoCodigo === prod); const unique = [...new Map(filtered.map(item => [item.actividadCodigo, {codigo: item.actividadCodigo, nombre: item.actividadNombre}])).values()]; unique.forEach(act => sel.add(new Option(`${act.codigo} - ${act.nombre}`, act.codigo))); }
+function populateSubproductos(form, data) { const sel = form.elements.fuenteCadenaId; sel.innerHTML = '<option value="">Seleccione...</option>'; const act = form.elements.actividad.value; if (!act) return; const filtered = data.filter(item => item.actividadCodigo === act); filtered.forEach(item => sel.add(new Option(item.subproductoNombre || item.actividadNombre, item.id))); }
+
+/**
+ * Alterna la visibilidad y el estado (required/disabled) entre el select y el input de texto.
+ * @param {boolean} isProgramaPresupuestal True si se debe mostrar el select, false para el input.
+ */
+function toggleSubproductoInput(isProgramaPresupuestal) {
+    const subproductoSelect = document.getElementById('ao-actividad-operativa-select');
+    const subproductoInput = document.getElementById('ao-actividad-operativa-input');
+
+    subproductoSelect.style.display = isProgramaPresupuestal ? 'block' : 'none';
+    subproductoSelect.disabled = !isProgramaPresupuestal;
+    subproductoSelect.required = isProgramaPresupuestal;
+
+    subproductoInput.style.display = isProgramaPresupuestal ? 'none' : 'block';
+    subproductoInput.disabled = isProgramaPresupuestal;
+    subproductoInput.required = !isProgramaPresupuestal;
+}
+
+/**
+ * Abre y configura el modal para crear una nueva actividad o editar una existente.
+ * @param {HTMLFormElement} form El formulario del modal.
+ * @param {HTMLElement} modal El elemento del modal.
+ * @param {string|null} id El ID del item a editar, o null para crear.
+ */
+async function openModalFor(form, modal, id = null) {
+    form.reset();
+    document.getElementById('fieldset-fuente-datos').disabled = true;
+
+    if (id) { // --- MODO EDICIÓN ---
+        editMode = true; currentEditingId = id;
+        document.getElementById('modalAOTitle').textContent = 'Modificar Actividad Operativa';
+        const ao = allActividades.find(a => a.id === id);
+        if (ao) {
+            form.elements.codigo.value = ao.codigo;
+            form.elements.accionEstrategicaId.value = ao.accionEstrategicaId;
+            form.elements.unidadMedidaId.value = ao.unidadMedidaId;
+            
+            const radio = ao.pertenecePrograma ? form.elements.pertenecePrograma[0] : form.elements.pertenecePrograma[1];
+            radio.checked = true;
+            
+            toggleSubproductoInput(ao.pertenecePrograma);
+
+            const sourceCollection = ao.pertenecePrograma ? 'cadenasPPR' : 'cadenas9001';
+            activeChainData = await dataService.getAll(sourceCollection);
+            document.getElementById('fieldset-fuente-datos').disabled = false;
+            
+            populateCategorias(form, activeChainData);
+            form.elements.categoria.value = ao.fuenteCadena.categoriaCodigo;
+            populateProductos(form, activeChainData);
+            form.elements.producto.value = ao.fuenteCadena.productoCodigo;
+            populateActividades(form, activeChainData);
+            form.elements.actividad.value = ao.fuenteCadena.actividadCodigo;
+
+            if (ao.pertenecePrograma) {
+                populateSubproductos(form, activeChainData);
+                form.elements.fuenteCadenaId.value = ao.fuenteCadenaId;
+            } else {
+                form.elements.nombreActividad.value = ao.nombreActividad || ao.fuenteCadena.actividadNombre;
+            }
+        }
+    } else { // --- MODO CREACIÓN ---
+        editMode = false; currentEditingId = null;
+        document.getElementById('modalAOTitle').textContent = 'Registrar Actividad Operativa';
+        const allAOs = await dataService.getAll('actividadesOperativas');
+        const nextIdNumber = allAOs.length > 0 ? Math.max(...allAOs.map(ao => parseInt(ao.codigo.replace('AOI', ''), 10) || 0)) + 1 : 760;
+        form.elements.codigo.value = `AOI${String(nextIdNumber).padStart(4, '0')}`;
+        
+        form.elements.pertenecePrograma[1].checked = true; // "No" por defecto
+        toggleSubproductoInput(false);
+    }
+    modal.style.display = 'flex';
+}
+
+
+// =======================================================
+// INICIALIZACIÓN Y LISTENERS DE EVENTOS
+// =======================================================
 export async function init() {
     const container = document.getElementById('actividades-operativas-container');
     const modal = document.getElementById('modal-actividad-operativa');
     const form = document.getElementById('form-actividad-operativa');
     const btnNuevaAO = document.getElementById('btnNuevaAO');
     const searchInput = document.getElementById('searchAO');
-    const umSelect = form.elements.unidadMedidaId;
-    const aeiSelect = form.elements.accionEstrategicaId;
-    const unidadesMedida = await dataService.getAll('unidadesDeMedida');
-    const aeis = await dataService.getAll('aeis');
-    aeiSelect.innerHTML = '<option value="">Seleccione...</option>';
-    aeis.forEach(aei => aeiSelect.add(new Option(`${aei.codigo} - ${aei.nombre}`, aei.id)));
-    umSelect.innerHTML = '<option value="">Seleccione...</option>';
-    unidadesMedida.forEach(um => umSelect.add(new Option(`${um.codigo} - ${um.nombre}`, um.id)));
+    
+    // Poblar selects iniciales del modal una sola vez
+    const [aeiSelect, umSelect] = [form.elements.accionEstrategicaId, form.elements.unidadMedidaId];
+    const [aeis, unidadesMedida] = await Promise.all([dataService.getAll('aeis'), dataService.getAll('unidadesDeMedida')]);
+    if (aeiSelect) { aeiSelect.innerHTML = '<option value="">Seleccione...</option>'; aeis.forEach(aei => aeiSelect.add(new Option(`${aei.codigo} - ${aei.nombre}`, aei.id))); }
+    if (umSelect) { umSelect.innerHTML = '<option value="">Seleccione...</option>'; unidadesMedida.forEach(um => umSelect.add(new Option(`${um.codigo} - ${um.nombre}`, um.id))); }
     
     await loadAndRender(container);
+    
+    // --- LISTENERS PRINCIPALES ---
     searchInput.addEventListener('input', () => renderActividades(container));
     btnNuevaAO.addEventListener('click', () => openModalFor(form, modal, null));
     modal.querySelector('.close-modal-btn').addEventListener('click', () => modal.style.display = 'none');
     
+    // Listener para los radio buttons
     form.elements.pertenecePrograma.forEach(radio => {
         radio.addEventListener('change', async () => {
-            const source = radio.value === 'si' ? 'cadenasPPR' : 'cadenas9001';
+            const esPrograma = radio.value === 'si';
+            toggleSubproductoInput(esPrograma);
+            const source = esPrograma ? 'cadenasPPR' : 'cadenas9001';
             activeChainData = await dataService.getAll(source);
-            populateCategorias(form);
+            populateCategorias(form, activeChainData);
             document.getElementById('fieldset-fuente-datos').disabled = false;
         });
     });
 
-    form.elements.categoria.addEventListener('change', () => populateProductos(form));
-    form.elements.producto.addEventListener('change', () => populateActividades(form));
-    form.elements.actividad.addEventListener('change', () => populateSubproductos(form));
-    
+    // Listeners para los selects en cascada
+    form.elements.categoria.addEventListener('change', () => populateProductos(form, activeChainData));
+    form.elements.producto.addEventListener('change', () => populateActividades(form, activeChainData));
+    form.elements.actividad.addEventListener('change', () => {
+        if (form.elements.pertenecePrograma.value === 'si') {
+            populateSubproductos(form, activeChainData);
+        }
+    });
+
+    // Listener para el SUBMIT del formulario
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         try {
             if (!form.checkValidity()) {
-                alert('Por favor, complete todos los campos requeridos.'); return;
+                form.reportValidity(); // Muestra validaciones nativas del navegador
+                notifications.showToast('Por favor, complete todos los campos requeridos.', 'error');
+                return;
             }
-            const originalItem = editMode ? allActividades.find(a => a.id === currentEditingId) : null;
-            const programadoData = originalItem 
-                ? originalItem.programado 
+            
+            const pertenecePrograma = form.elements.pertenecePrograma.value === 'si';
+            const programadoData = editMode
+                ? (allActividades.find(a => a.id === currentEditingId)?.programado || {})
                 : { ene: 0, feb: 0, mar: 0, abr: 0, may: 0, jun: 0, jul: 0, ago: 0, set: 0, oct: 0, nov: 0, dic: 0 };
+            
             const newAO = {
                 id: editMode ? currentEditingId : `aoi-${Date.now()}`,
                 codigo: form.elements.codigo.value,
                 accionEstrategicaId: form.elements.accionEstrategicaId.value,
-                pertenecePrograma: form.elements.pertenecePrograma.value === 'si',
-                fuenteCadenaId: form.elements.fuenteCadenaId.value,
                 unidadMedidaId: form.elements.unidadMedidaId.value,
-                programado: programadoData
+                pertenecePrograma,
+                programado: programadoData,
+                fuenteCadenaId: null,
+                nombreActividad: null
             };
+
+            if (pertenecePrograma) {
+                newAO.fuenteCadenaId = form.elements.fuenteCadenaId.value;
+            } else {
+                const idActividad = activeChainData.find(c => c.actividadCodigo === form.elements.actividad.value)?.id;
+                newAO.fuenteCadenaId = idActividad;
+                newAO.nombreActividad = form.elements.nombreActividad.value.trim();
+            }
+
             if (editMode) { await dataService.update('actividadesOperativas', newAO); } 
             else { await dataService.add('actividadesOperativas', newAO); }
+            
+            notifications.showToast('Actividad Operativa guardada exitosamente.', 'success');
             modal.style.display = 'none';
             await loadAndRender(container);
-        } catch (error) { console.error('Error al guardar la actividad operativa:', error); alert('Ocurrió un error inesperado al guardar.'); }
+        } catch (error) { 
+            console.error('Error al guardar la actividad operativa:', error);
+            notifications.showToast('Ocurrió un error inesperado al guardar.', 'error'); 
+        }
     });
-    
-    // --- CAMBIO CLAVE: MODIFICAMOS EL LISTENER DEL CONTENEDOR PARA AÑADIR LA LÓGICA DE GUARDADO ---
+
+    // Listeners delegados en el contenedor de actividades
     container.addEventListener('click', async (e) => {
-        
-        // Acción de guardar programación
+        const aoItem = e.target.closest('.ao-item');
+        const id = aoItem?.dataset.id;
+
         if (e.target.closest('.btn-save-programacion')) {
-            const aoItem = e.target.closest('.ao-item');
-            const id = aoItem?.dataset.id;
             if (!id) return;
-            
-            const originalAO = allActividades.find(a => a.id === id);
+            const originalAO = await dataService.getById('actividadesOperativas', id);
             if (!originalAO) return;
-
-            const newProgramado = { ...originalAO.programado }; // Copiamos el objeto original
-            const inputs = aoItem.querySelectorAll('.programado-input');
-
-            inputs.forEach(input => {
-                const month = input.dataset.month;
-                const value = parseInt(input.value, 10) || 0; // Si está vacío o no es un número, usamos 0
-                if (newProgramado.hasOwnProperty(month)) {
-                    newProgramado[month] = value;
-                }
+            const newProgramado = { ...originalAO.programado };
+            aoItem.querySelectorAll('.programado-input').forEach(input => {
+                newProgramado[input.dataset.month] = parseInt(input.value, 10) || 0;
             });
-
-            // Creamos el objeto actualizado
-            const updatedAO = { ...originalAO, programado: newProgramado };
-            
-            await dataService.update('actividadesOperativas', updatedAO);
-            
-            alert('Programación guardada exitosamente.');
-            // Volvemos a cargar y renderizar para actualizar el total
+            await dataService.update('actividadesOperativas', { ...originalAO, programado: newProgramado });
+            notifications.showToast('Programación guardada exitosamente.', 'success');
             await loadAndRender(container); 
-            return;
         }
-
-        // Acciones de modificar y eliminar
-        if (e.target.closest('.btn-modify-ao')) { const id = e.target.closest('.ao-item')?.dataset.id; if (id) openModalFor(form, modal, id); return; }
-        if (e.target.closest('.btn-delete-ao')) {
-            const id = e.target.closest('.ao-item')?.dataset.id;
-            if (id && confirm('¿Está seguro de eliminar esta Actividad Operativa?')) {
+        else if (e.target.closest('.btn-modify-ao')) {
+            if (id) openModalFor(form, modal, id);
+        }
+        else if (e.target.closest('.btn-delete-ao')) {
+            if (id && await notifications.showConfirm('Confirmar Eliminación', '¿Está seguro de eliminar esta Actividad Operativa?')) {
                 await dataService.delete('actividadesOperativas', id);
+                notifications.showToast('Actividad eliminada.', 'info');
                 await loadAndRender(container);
-            } return;
+            }
         }
-
-        // Acción de abrir/cerrar acordeón
-        const header = e.target.closest('.ao-header');
-        if (header) {
-            const aoItem = header.closest('.ao-item');
+        else if (e.target.closest('.ao-header')) {
             aoItem.classList.toggle('open');
-            header.querySelector('.ao-toggle-btn i').classList.toggle('fa-plus');
-            header.querySelector('.ao-toggle-btn i').classList.toggle('fa-minus');
+            const icon = aoItem.querySelector('.ao-toggle-btn i');
+            icon.classList.toggle('fa-plus');
+            icon.classList.toggle('fa-minus');
         }
     });
 }

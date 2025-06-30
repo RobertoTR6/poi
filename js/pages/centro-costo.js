@@ -16,6 +16,7 @@ export function init() {
         modalTitleId: 'modalCostoTitle',
         modalTitles: { create: 'Registrar Centro de Costo', edit: 'Modificar Centro de Costo' },
         paginationContainerId: 'pagination-centro-costo',
+        uniqueField: 'codigo',
 
         renderRow: async (item) => {
             const s = await dataService.getSubunidadPorCodigo(item.subunidadCodigo);
@@ -25,7 +26,12 @@ export function init() {
                 <td>${s?.nombre ?? 'N/A'}</td>
                 <td>${item.codigo}</td>
                 <td>${item.nombre}</td>
-                <td><button class="btn btn-info btn-modify" title="Modificar"><i class="fas fa-pencil-alt"></i></button><button class="btn btn-danger btn-delete" title="Eliminar"><i class="fas fa-trash-alt"></i></button></td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-info btn-modify" title="Modificar"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="btn btn-danger btn-delete" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </td>
             `;
         },
         onBeforeOpenModal: async (form) => {
@@ -52,8 +58,7 @@ export function init() {
             form.elements.codigo.value = item.codigo;
             form.elements.nombre.value = item.nombre;
         },
-        readForm: (form, item) => ({
-            id: item?.id,
+        readForm: (form) => ({
             subunidadCodigo: form.elements.subunidadCodigo.value,
             codigo: form.elements.codigo.value.trim(),
             nombre: form.elements.nombre.value.trim()

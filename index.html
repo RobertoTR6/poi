@@ -18,8 +18,8 @@
         <!-- ======================= -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="https://www.insnsb.gob.pe/wp-content/uploads/2023/03/logo-insn-sb-white-300x79.png" alt="Logo" class="logo" style="background: #005A9C; padding: 5px; border-radius: 4px;">
-                <span class="logo-text">INSITT</span>
+                <img src="https://webservices.insnsb.gob.pe/mpd/Images/logoINSN.png" alt="Logo" class="logo" style="background: #ffffff; padding: 5px; border-radius: 4px;">
+                <span class="logo-text">Sistema Integrado Administrativo (SIA)</span>
             </div>
             <!-- El contenido del menú se generará dinámicamente con nav.js -->
             <nav id="sidebar-nav" class="sidebar-nav"></nav> 
@@ -113,7 +113,6 @@
                     <div class="table-container">
                         <table>
                             <thead>
-                                <!-- VERSIÓN CORREGIDA: Tiene 9 encabezados, coincidiendo con las 9 celdas de datos generadas por JS -->
                                 <tr>
                                     <th>Código Cat.</th>
                                     <th>Categoría Presupuestal</th>
@@ -150,7 +149,7 @@
                 </div>
             </main>
 
-            <!-- PÁGINA: REGISTRO DE AEI -->
+            <!-- PÁGINA: REGISTRO DE AEI (AÑADIDA) -->
             <main id="page-registro-aei" class="main-content page-content">
                  <header class="main-header"><div class="header-title"><h1>Planeamiento</h1><p>Acciones Estratégicas (AEI)</p></div><div class="user-profile"></div></header>
                  <div class="content-card">
@@ -164,6 +163,23 @@
                     </div>
                     <div class="table-container"><table><thead><tr><th>Objetivo Estratégico</th><th>Código</th><th>Denominación</th><th>Acción</th></tr></thead><tbody id="tableAei"></tbody></table></div>
                     <div class="pagination-container" id="pagination-aei"></div>
+                </div>
+            </main>
+            
+            <!-- PÁGINA: REGISTRO DE UNIDAD DE MEDIDA (AÑADIDA) -->
+            <main id="page-registro-unidad-medida" class="main-content page-content">
+                <header class="main-header"><div class="header-title"><h1>Planeamiento</h1><p>Unidades de Medida</p></div><div class="user-profile"></div></header>
+                 <div class="content-card">
+                     <div class="card-header"><h2>Unidades de Medida</h2>
+                         <div class="actions-toolbar">
+                            <input type="file" class="file-importer" id="file-importer-unidad-medida" accept=".xlsx" style="display: none;"/>
+                            <button id="btnImportarMedida" class="btn btn-secondary"><i class="fas fa-upload"></i> Importar</button>
+                            <button id="btnNuevoMedida" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo</button>
+                            <input type="text" id="searchMedida" class="search-input" placeholder="Buscar..."><button id="downloadMedida" class="btn btn-secondary"><i class="fas fa-download"></i> Descargar</button>
+                        </div>
+                    </div>
+                    <div class="table-container"><table><thead><tr><th>Código</th><th>Nombre</th><th>Acción</th></tr></thead><tbody id="tableMedida"></tbody></table></div>
+                    <div class="pagination-container" id="pagination-unidad-medida"></div>
                 </div>
             </main>
 
@@ -182,7 +198,6 @@
                     <div class="table-container">
                         <table>
                             <thead>
-                                <!-- Los 6 encabezados que solicitaste -->
                                 <tr>
                                     <th>Código Cat.</th>
                                     <th>Categoría Presupuestal</th>
@@ -215,32 +230,12 @@
                     </div>
                 </div>
             </main>
-
-            <!-- PÁGINA: REGISTRO DE UNIDAD DE MEDIDA -->
-            <main id="page-registro-unidad-medida" class="main-content page-content">
-                <header class="main-header"><div class="header-title"><h1>Planeamiento</h1><p>Unidades de Medida</p></div><div class="user-profile"></div></header>
-                 <div class="content-card">
-                     <div class="card-header"><h2>Unidades de Medida</h2>
-                         <div class="actions-toolbar">
-                            <input type="file" class="file-importer" id="file-importer-unidad-medida" accept=".xlsx" style="display: none;"/>
-                            <button id="btnImportarMedida" class="btn btn-secondary"><i class="fas fa-upload"></i> Importar</button>
-                            <button id="btnNuevoMedida" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo</button>
-                            <input type="text" id="searchMedida" class="search-input" placeholder="Buscar..."><button id="downloadMedida" class="btn btn-secondary"><i class="fas fa-download"></i> Descargar</button>
-                        </div>
-                    </div>
-                    <div class="table-container"><table><thead><tr><th>Código</th><th>Nombre</th><th>Acción</th></tr></thead><tbody id="tableMedida"></tbody></table></div>
-                    <div class="pagination-container" id="pagination-unidad-medida"></div>
-                </div>
-            </main>
         </div>
     </div>
  
-    
-    
     <!-- ======================= -->
     <!--         MODALES         -->
     <!-- ======================= -->
-    <!-- (La sección de modales permanece sin cambios, aquí está completa para referencia) -->
     
     <!-- MODAL: UNIDAD -->
     <div id="modal-unidad" class="modal-overlay">
@@ -272,68 +267,45 @@
     </div>
     <!-- MODAL: ACTIVIDAD OPERATIVA -->
     <div id="modal-actividad-operativa" class="modal-overlay">
-        <div class="modal-content" style="max-width: 800px;"> <!-- Hacemos el modal un poco más ancho -->
+        <div class="modal-content" style="max-width: 800px;">
             <header class="modal-header">
                 <h2 id="modalAOTitle">Registrar Actividad Operativa</h2>
                 <button class="close-modal-btn">×</button>
             </header>
             <main class="modal-body">
                 <form id="form-actividad-operativa" novalidate>
-                    <div class="form-group">
-                        <label>¿Pertenece a un Programa Presupuestal?</label>
-                        <div class="radio-group">
-                            <label><input type="radio" name="pertenecePrograma" value="si" required> Sí</label>
-                            <label style="margin-left: 2rem;"><input type="radio" name="pertenecePrograma" value="no" required> No</label>
-                        </div>
-                    </div>
-
-                    <div class="form-row"> <!-- Usaremos grid para un mejor layout -->
-                        <div class="form-group">
-                            <label for="ao-accion-estrategica">Acción Estratégica</label>
-                            <select id="ao-accion-estrategica" name="accionEstrategicaId" required></select>
-                        </div>
-                        <div class="form-group">
-                            <label for="ao-codigo">Código AO</label>
-                            <input type="text" id="ao-codigo" name="codigo" placeholder="(Automático)" readonly>
-                        </div>
-                    </div>
-
-                    <fieldset id="fieldset-fuente-datos" disabled> <!-- Deshabilitado hasta que se elija Sí/No -->
-                        <legend>Datos de Cadena Funcional</legend>
+                    <div class="form-group"><label>¿Pertenece a un Programa Presupuestal?</label><div class="radio-group"><label><input type="radio" name="pertenecePrograma" value="si" required> Sí</label><label style="margin-left: 2rem;"><input type="radio" name="pertenecePrograma" value="no" required> No</label></div></div>
+                    <div class="form-row"><div class="form-group"><label for="ao-accion-estrategica">Acción Estratégica</label><select id="ao-accion-estrategica" name="accionEstrategicaId" required></select></div><div class="form-group"><label for="ao-codigo">Código AO</label><input type="text" id="ao-codigo" name="codigo" placeholder="(Automático)" readonly></div></div>
+                    <fieldset id="fieldset-fuente-datos" disabled><legend>Datos de Cadena Funcional</legend><div class="form-row"><div class="form-group"><label for="ao-categoria">Categoría</label><select id="ao-categoria" name="categoria" required></select></div><div class="form-group"><label for="ao-producto">Producto</label><select id="ao-producto" name="producto" required></select></div></div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="ao-categoria">Categoría</label>
-                                <select id="ao-categoria" name="categoria" required></select>
-                            </div>
-                            <div class="form-group">
-                                <label for="ao-producto">Producto</label>
-                                <select id="ao-producto" name="producto" required></select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                           <div class="form-group">
                                 <label for="ao-actividad">Actividad Pptal</label>
                                 <select id="ao-actividad" name="actividad" required></select>
                             </div>
-                           <div class="form-group">
-                                <label for="ao-actividad-operativa">Actividad Operativa (Subproducto)</label>
-                                <select id="ao-actividad-operativa" name="fuenteCadenaId" required></select>
+                            <div class="form-group">
+                                <label for="ao-actividad-operativa-select">Actividad Operativa (Subproducto)</label>
+                                <!-- Contenedor para el campo dinámico -->
+                                <div id="subproducto-container">
+                                    <!-- Dropdown para Programa Presupuestal (Sí) -->
+                                    <select id="ao-actividad-operativa-select" name="fuenteCadenaId" class="dynamic-subproducto" required>
+                                        <!-- Opciones se llenarán con JS -->
+                                    </select>
+                                    <!-- Campo de texto para Acciones Centrales (No) -->
+                                    <input type="text" id="ao-actividad-operativa-input" name="nombreActividad" class="dynamic-subproducto" style="display: none;" placeholder="Redacte el nombre de la actividad...">
+                                </div>
                             </div>
                         </div>
                     </fieldset>
-                    
-                    <div class="form-group">
-                         <label for="ao-unidad-medida">Unidad de Medida</label>
-                         <select id="ao-unidad-medida" name="unidadMedidaId" required></select>
-                    </div>
+                    <div class="form-group"><label for="ao-unidad-medida">Unidad de Medida</label><select id="ao-unidad-medida" name="unidadMedidaId" required></select></div>
                 </form>
             </main>
-            <footer class="modal-footer">
-                <button type="submit" form="form-actividad-operativa" class="btn btn-primary">Grabar</button>
-            </footer>
+            <footer class="modal-footer"><button type="submit" form="form-actividad-operativa" class="btn btn-primary">Grabar</button></footer>
         </div>
     </div>    
     
+    <!-- CONTENEDOR PARA NOTIFICACIONES TOAST -->
+    <div id="toast-container"></div>
+
     <!-- SCRIPT PRINCIPAL DE LA APLICACIÓN -->
     <script type="module" src="js/main.js"></script>
 </body>

@@ -1,5 +1,8 @@
+// js/modules/crud.js
+
 import { dataService } from './data.js';
-import { getCurrentUser } from './auth.js';
+// Importa el nuevo módulo de notificaciones
+import { notifications } from './notifications.js';
 
 /**
  * Controlador CRUD genérico, flexible y reutilizable para todas las páginas de gestión.
@@ -12,7 +15,8 @@ export function setupCrudController(config) {
         importBtnId, fileImporterId, importConfig,
         modalId, formId, modalTitleId, modalTitles, 
         renderRow, fillForm, readForm, onBeforeOpenModal, csvConfig, filterFn,
-        paginationContainerId
+        paginationContainerId,
+        uniqueField
     } = config;
     const ITEMS_PER_PAGE = 25;
 
@@ -22,16 +26,12 @@ export function setupCrudController(config) {
         console.error("CRUD Error Fatal: No se pudo encontrar el contenedor principal para la tabla:", tableBodyId); 
         return; 
     }
-
-    // Elementos Esenciales
     const tableBody = page.querySelector(`#${tableBodyId}`);
     const searchInput = page.querySelector(`#${searchInputId}`);
     if (!tableBody || !searchInput) {
         console.error("CRUD Error Fatal: Faltan 'tableBody' o 'searchInput' en la página:", page.id);
         return;
     }
-
-    // Elementos Opcionales
     const createBtn = createBtnId ? page.querySelector(`#${createBtnId}`) : null;
     const downloadBtn = downloadBtnId ? page.querySelector(`#${downloadBtnId}`) : null;
     const importBtn = importBtnId ? page.querySelector(`#${importBtnId}`) : null;
@@ -52,13 +52,19 @@ export function setupCrudController(config) {
     const closeModal = () => { if (modal) { modal.style.display = 'none'; currentlyEditingId = null; if (form) form.reset(); } };
 
     const handleImport = async (file) => {
-        if (!file || !importConfig?.headers || !importConfig?.uniqueKey) { alert("Error de configuración: La importación necesita 'headers' y 'uniqueKey'."); return; }
+        if (!file || !importConfig?.headers || !importConfig?.uniqueKey) { 
+            notifications.showToast("Error de configuración: La importación necesita 'headers' y 'uniqueKey'.", 'error'); 
+            return; 
+        }
         const reader = new FileReader();
         reader.onload = async (e) => {
             try {
                 const data = new Uint8Array(e.target.result), workbook = XLSX.read(data, { type: 'array' }), worksheet = workbook.Sheets[workbook.SheetNames[0]];
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-                if (jsonData.length === 0) { alert("El archivo Excel está vacío."); return; }
+                if (jsonData.length === 0) { 
+                    notifications.showToast("El archivo Excel está vacío.", 'info'); 
+                    return; 
+                }
                 const uniqueKey = importConfig.uniqueKey, existingItems = await dataService.getAll(collection), existingItemsMap = new Map(existingItems.map(item => [String(item[uniqueKey]), item]));
                 const headerMapping = Object.fromEntries(Object.entries(importConfig.headers).map(([k, v]) => [k.toLowerCase().trim(), v])), booleanFields = new Set(importConfig.booleanFields || []);
                 let itemsAdded = 0, itemsUpdated = 0;
@@ -74,10 +80,13 @@ export function setupCrudController(config) {
                     if (existingItem) { newItem.id = existingItem.id; await dataService.update(collection, newItem); itemsUpdated++; } 
                     else { await dataService.add(collection, newItem); itemsAdded++; }
                 }
-                alert(`Importación completada:\n- ${itemsAdded} registros nuevos añadidos.\n- ${itemsUpdated} registros existentes actualizados.`);
+                notifications.showToast(`Importación completada: ${itemsAdded} nuevos, ${itemsUpdated} actualizados.`, 'success');
                 localDataCache = [];
                 await renderTable();
-            } catch (error) { console.error(`[${collection}] Error al importar:`, error); alert("Ocurrió un error crítico al procesar el archivo."); } 
+            } catch (error) { 
+                console.error(`[${collection}] Error al importar:`, error); 
+                notifications.showToast("Ocurrió un error crítico al procesar el archivo.", 'error'); 
+            } 
             finally { if (fileImporter) fileImporter.value = ''; }
         };
         reader.readAsArrayBuffer(file);
@@ -108,22 +117,49 @@ export function setupCrudController(config) {
         }));
         tableBody.innerHTML = rowsHTML.join('');
         renderPagination();
-        
-        // La actualización del perfil de usuario fue movida a `main.js` para mayor eficiencia.
     };
 
     const handleFormSubmit = async (e) => {
         e.preventDefault();
         const requiredFields = Array.from(form.querySelectorAll('[required]'));
-        if (requiredFields.some(field => !field.value.trim())) { alert('Por favor, complete todos los campos requeridos.'); return; }
-        const originalItem = currentlyEditingId ? await dataService.getById(collection, currentlyEditingId) : null;
-        let itemToSave = readForm(form, originalItem);
-        if (currentlyEditingId) { itemToSave.id = currentlyEditingId; await dataService.update(collection, itemToSave); } 
-        else { await dataService.add(collection, itemToSave); }
-        closeModal(); localDataCache = []; await renderTable();
-    };
+        if (requiredFields.some(field => !field.value.trim())) { 
+            notifications.showToast('Por favor, complete todos los campos requeridos.', 'error'); 
+            return; 
+        }
 
-    // --- 4. Asignación INDEPENDIENTE y CONDICIONAL de Event Listeners ---
+        const dataFromForm = readForm(form); 
+
+        if (uniqueField) {
+            const allItems = await dataService.getAll(collection);
+            const uniqueValue = String(dataFromForm[uniqueField]).trim().toLowerCase();
+
+            const isDuplicate = allItems.some(item =>
+                String(item[uniqueField]).trim().toLowerCase() === uniqueValue &&
+                item.id !== currentlyEditingId
+            );
+
+            if (isDuplicate) {
+                notifications.showToast(`Error: Ya existe otro registro con el valor "${dataFromForm[uniqueField]}".`, 'error');
+                return;
+            }
+        }
+
+        if (currentlyEditingId) {
+            const originalItem = await dataService.getById(collection, currentlyEditingId);
+            const updatedItem = { ...originalItem, ...dataFromForm, id: currentlyEditingId };
+            await dataService.update(collection, updatedItem);
+            notifications.showToast('Registro actualizado exitosamente.', 'success');
+        } else {
+            await dataService.add(collection, dataFromForm);
+            notifications.showToast('Registro guardado exitosamente.', 'success');
+        }
+        
+        closeModal(); 
+        localDataCache = []; 
+        await renderTable();
+    };
+    
+    // --- 4. Asignación de Event Listeners ---
     searchInput.addEventListener('input', () => { currentPage = 1; renderTable(); });
 
     if (paginationContainer) {
@@ -143,7 +179,10 @@ export function setupCrudController(config) {
     if (downloadBtn) {
         downloadBtn.addEventListener('click', async () => {
             const dataToExport = await dataService.getAll(collection);
-            if(dataToExport.length === 0){ alert("No hay datos para exportar."); return; }
+            if(dataToExport.length === 0){ 
+                notifications.showToast("No hay datos para exportar.", 'info'); 
+                return; 
+            }
             const headers = csvConfig.headers.split(',');
             const formattedData = await Promise.all(dataToExport.map(async (item) => { const rowArray = await csvConfig.formatRow(item); let rowObject = {}; headers.forEach((header, index) => { rowObject[header] = rowArray[index] ?? ''; }); return rowObject; }));
             const worksheet = XLSX.utils.json_to_sheet(formattedData); const workbook = XLSX.utils.book_new();
@@ -159,7 +198,8 @@ export function setupCrudController(config) {
             const id = button?.closest('tr[data-id]')?.dataset.id;
             if (!id) return;
             if (button.classList.contains('btn-modify')) {
-                currentlyEditingId = id; const item = await dataService.getById(collection, id);
+                currentlyEditingId = id;
+                const item = await dataService.getById(collection, id);
                 if (!item || !form || !modalTitle) return;
                 modalTitle.textContent = modalTitles.edit; form.reset();
                 if (onBeforeOpenModal) await onBeforeOpenModal(form, item);
@@ -167,9 +207,25 @@ export function setupCrudController(config) {
                 openModal();
             } else if (button.classList.contains('btn-delete')) {
                 const item = await dataService.getById(collection, id);
-                if (confirm(`¿Está seguro de eliminar "${item.nombre || item.codigo || item.id}"?`)) {
-                    await dataService.delete(collection, id); localDataCache = [];
-                    if (filteredDataCache.length % ITEMS_PER_PAGE === 1 && currentPage > 1) { currentPage--; }
+                
+                const confirmed = await notifications.showConfirm(
+                    'Confirmar Eliminación', 
+                    `¿Está seguro de que desea eliminar "${item.nombre || item.codigo || item.id}"?`
+                );
+                
+                if (confirmed) {
+                    await dataService.delete(collection, id);
+                    notifications.showToast('Registro eliminado.', 'success');
+                    localDataCache = [];
+                    // Solución al bug de paginación
+                    const query = searchInput.value.toLowerCase();
+                    const defaultFilter = (item, q) => Object.values(item).some(val => String(val).toLowerCase().includes(q));
+                    const activeFilter = filterFn || defaultFilter;
+                    const remainingItems = (await dataService.getAll(collection)).filter(item => activeFilter(item, query));
+                    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+                    if (startIndex >= remainingItems.length && currentPage > 1) {
+                        currentPage--;
+                    }
                     await renderTable();
                 }
             }
@@ -180,5 +236,5 @@ export function setupCrudController(config) {
     }
 
     // --- 5. Carga Inicial ---
-    renderTable(); 
+    renderTable();
 }

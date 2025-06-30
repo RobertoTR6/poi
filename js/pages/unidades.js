@@ -15,11 +15,17 @@ export function init() {
         modalTitleId: 'modalUnidadTitle',
         modalTitles: { create: 'Registrar Unidad', edit: 'Modificar Unidad' },
         paginationContainerId: 'pagination-unidad',
+        uniqueField: 'codigo',
 
         renderRow: (item) => `
             <td>${item.codigo}</td>
             <td>${item.nombre}</td>
-            <td><button class="btn btn-info btn-modify" title="Modificar"><i class="fas fa-pencil-alt"></i></button><button class="btn btn-danger btn-delete" title="Eliminar"><i class="fas fa-trash-alt"></i></button></td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn btn-info btn-modify" title="Modificar"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="btn btn-danger btn-delete" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            </td>
         `,
 
         fillForm: (form, item) => {
@@ -27,8 +33,7 @@ export function init() {
             form.elements.nombre.value = item.nombre;
         },
 
-        readForm: (form, item) => ({
-            id: item?.id,
+        readForm: (form) => ({
             codigo: form.elements.codigo.value.trim(),
             nombre: form.elements.nombre.value.trim()
         }),
