@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión</title>
+    <!-- Librería para manejar archivos Excel (importar/exportar) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Hoja de estilos principal -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Iconos de Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- ======================= -->
+        <!--     MENÚ LATERAL        -->
+        <!-- ======================= -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="https://webservices.insnsb.gob.pe/mpd/Images/logoINSN.png" alt="Logo" class="logo" style="background: #ffffff; padding: 5px; border-radius: 4px;">
+                <span class="logo-text">Sistema Integrado Administrativo (SIA)</span>
+            </div>
+            <!-- El contenido del menú se generará dinámicamente con nav.js -->
+            <nav id="sidebar-nav" class="sidebar-nav"></nav> 
+        </aside>
+
+        <!-- ============================= -->
+        <!--     CONTENEDOR DE PÁGINAS     -->
+        <!-- ============================= -->
+        <div class="content-wrapper">
+            
+            <!-- PÁGINA: REGISTRO DE UNIDAD -->
+            <main id="page-registro-unidad" class="main-content page-content">
+                <header class="main-header"><div class="header-title"><h1>Configuración</h1><p>Registro de Unidad</p></div><div class="user-profile"></div></header>
+                <div class="content-card">
+                    <div class="card-header"><h2>Unidades Registradas</h2>
+                        <div class="actions-toolbar">
+                            <input type="file" class="file-importer" id="file-importer-unidad" accept=".xlsx" style="display: none;"/>
+                            <button id="btnImportarUnidad" class="btn btn-secondary"><i class="fas fa-upload"></i> Importar</button>
+                            <button id="btnNuevoUnidad" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo</button>
+                            <input type="text" id="searchUnidad" class="search-input" placeholder="Buscar..."><button id="downloadUnidad" class="btn btn-secondary"><i class="fas fa-download"></i> Descargar</button>
+                        </div>
+                    </div>
+                    <div class="table-container"><table><thead><tr><th>Código</th><th>Nombre</th><th>Acción</th></tr></thead><tbody id="tableUnidad"></tbody></table></div>
+                    <div class="pagination-container" id="pagination-unidad"></div>
+                </div>
+            </main>
+
+            <!-- PÁGINA: REGISTRO DE SUBUNIDAD -->
+            <main id="page-registro-subunidad" class="main-content page-content">
+                <header class="main-header"><div class="header-title"><h1>Configuración</h1><p>Registro de Subunidad</p></div><div class="user-profile"></div></header>
+                <div class="content-card">
+                    <div class="card-header"><h2>Subunidades</h2>
+                        <div class="actions-toolbar">
+                            <input type="file" class="file-importer" id="file-importer-subunidad" accept=".xlsx" style="display: none;"/>
+                            <button id="btnImportarSubunidad" class="btn btn-secondary"><i class="fas fa-upload"></i> Importar</button>
+                            <button id="btnNuevoSubunidad" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo</button>
+                            <input type="text" id="searchSubunidad" class="search-input" placeholder="Buscar..."><button id="downloadSubunidad" class="btn btn-secondary"><i class="fas fa-download"></i> Descargar</button>
+                        </div>
+                    </div>
+                    <div class="table-container"><table><thead><tr><th>Unidad</th><th>Código</th><th>Subunidad</th><th>Acción</th></tr></thead><tbody id="tableSubunidad"></tbody></table></div>
+                    <div class="pagination-container" id="pagination-subunidad"></div>
+                </div>
+            </main>
+
+            <!-- PÁGINA: REGISTRO DE CENTRO DE COSTO -->
+            <main id="page-registro-centro-costo" class="main-content page-content">
+                <header class="main-header"><div class="header-title"><h1>Configuración</h1><p>Registro de Centros de Costo</p></div><div class="user-profile"></div></header>
+                <div class="content-card">
+                    <div class="card-header"><h2>Centros de Costo</h2>
+                         <div class="actions-toolbar">
+                            <input type="file" class="file-importer" id="file-importer-centro-costo" accept=".xlsx" style="display: none;"/>
+                            <button id="btnImportarCosto" class="btn btn-secondary"><i class="fas fa-upload"></i> Importar</button>
+                            <button id="btnNuevoCosto" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo</button>
+                            <input type="text" id="searchCosto" class="search-input" placeholder="Buscar..."><button id="downloadCosto" class="btn btn-secondary"><i class="fas fa-download"></i> Descargar</button>
+                        </div>
+                    </div>
+                    <div class="table-container"><table><thead><tr><th>Unidad</th><th>Subunidad</th><th>Código</th><th>Centro de Costo</th><th>Acción</th></tr></thead><tbody id="tableCosto"></tbody></table></div>
+                    <div class="pagination-container" id="pagination-centro-costo"></div>
+                </div>
+            </main>
+
+            <!-- PÁGINA: REGISTRO DE USUARIOS -->
+            <main id="page-registro-usuario" class="main-content page-content">
+                <header class="main-header"><div class="header-title"><h1>Configuración</h1><p>Registro de Usuarios</p></div><div class="user-profile"></div></header>
+                <div class="content-card">
+                    <div class="card-header"><h2>Usuarios</h2>
+                        <div class="actions-toolbar">
+                            <input type="file" class="file-importer" id="file-importer-usuario" accept=".xlsx" style="display: none;"/>
+                            <button id="btnImportarUsuario" class="btn btn-secondary"><i class="fas fa-upload"></i> Importar</button>
+                            <button id="btnNuevoUsuario" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo</button>
+                            <input type="text" id="searchUsuario" class="search-input" placeholder="Buscar..."><button id="downloadUsuario" class="btn btn-secondary"><i class="fas fa-download"></i> Descargar</button>
+                        </div>
+                    </div>
+                    <div class="table-container"><table><thead><tr><th>Nombre</th><th>Usuario</th><th>Centro de Costo</th><th>Permisos</th><th>Acción</th></tr></thead><tbody id="tableUsuario"></tbody></table></div>
+                    <div class="pagination-container" id="pagination-usuario"></div>
+                </div>
+            </main>
+            
+            <!-- PÁGINA: CADENA PPR -->
+            <main id="page-cadena-ppr" class="main-content page-content">
+                <header class="main-header"><div class="header-title"><h1>Planeamiento</h1><p>Registro de Cadena PPR</p></div><div class="user-profile"></div></header>
+                <div class="content-card">
+                    <div class="card-header"><h2>Cadenas PPR Registradas</h2>
+                        <div class="actions-toolbar">
+                            <input type="file" class="file-importer" id="file-importer-ppr" accept=".xlsx" style="display: none;"/>
+                            <button id="btnImportarPPR" class="btn btn-primary"><i class="fas fa-upload"></i> Importar Registros</button>
+                            <input type="text" id="searchPPR" class="search-input" placeholder="Buscar..."/>
+                            <button id="btnDescargarPPR" class="btn btn-secondary"><i class="fas fa-download"></i> Descargar Plantilla</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Código Cat.</th>
+                                    <th>Categoría Presupuestal</th>
+                                    <th>Código Prod.</th>
+                                    <th>Producto</th>
+                                    <th>Código Act.</th>
+                                    <th>Actividad Presupuestal</th>
+                                    <th>Código Subp.</th>
+                                    <th>Subproducto</th>
+                                    <th>Traz.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablePPR"></tbody>
+                        </table>
+                    </div>
+                    <div class="pagination-container" id="pagination-ppr"></div>
+                </div>
+            </main>
+
+            <!-- PÁGINA: REGISTRO DE OEI -->
+            <main id="page-registro-oei" class="main-content page-content">
+                 <header class="main-header"><div class="header-title"><h1>Planeamiento</h1><p>Objetivos Estratégicos (OEI)</p></div><div class="user-profile"></div></header>
+                <div class="content-card">
+                     <div class="card-header"><h2>OEI Registrados</h2>
+                         <div class="actions-toolbar">
+                            <input type="file" class="file-importer" id="file-importer-oei" accept=".xlsx" style="display: none;"/>
+                            <button id="btnImportarOei" class="btn btn-secondary"><i class="fas fa-upload"></i> Importar</button>
+                            <button id="btnNuevoOei" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo</button>
+                            <input type="text" id="searchOei" class="search-input" placeholder="Buscar..."><button id="downloadOei" class="btn btn-secondary"><i class="fas fa-download"></i> Descargar</button>
+                        </div>
+                    </div>
+                    <div class="table-container"><table><thead><tr><th>PEI</th><th>Código</th><th>Denominación</th><th>Acción</th></tr></thead><tbody id="tableOei"></tbody></table></div>
+                    <div class="pagination-container" id="pagination-oei"></div>
+                </div>
+            </main>
+
+            <!-- PÁGINA: REGISTRO DE AEI (AÑADIDA) -->
+            <main id="page-registro-aei" class="main-content page-content">
+                 <header class="main-header"><div class="header-title"><h1>Planeamiento</h1><p>Acciones Estratégicas (AEI)</p></div><div class="user-profile"></div></header>
+                 <div class="content-card">
+                     <div class="card-header"><h2>AEI Registrados</h2>
+                         <div class="actions-toolbar">
+                            <input type="file" class="file-importer" id="file-importer-aei" accept=".xlsx" style="display: none;"/>
+                            <button id="btnImportarAei" class="btn btn-secondary"><i class="fas fa-upload"></i> Importar</button>
+                            <button id="btnNuevoAei" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo</button>
+                            <input type="text" id="searchAei" class="search-input" placeholder="Buscar..."><button id="downloadAei" class="btn btn-secondary"><i class="fas fa-download"></i> Descargar</button>
+                        </div>
+                    </div>
+                    <div class="table-container"><table><thead><tr><th>Objetivo Estratégico</th><th>Código</th><th>Denominación</th><th>Acción</th></tr></thead><tbody id="tableAei"></tbody></table></div>
+                    <div class="pagination-container" id="pagination-aei"></div>
+                </div>
+            </main>
+            
+            <!-- PÁGINA: REGISTRO DE UNIDAD DE MEDIDA (AÑADIDA) -->
+            <main id="page-registro-unidad-medida" class="main-content page-content">
+                <header class="main-header"><div class="header-title"><h1>Planeamiento</h1><p>Unidades de Medida</p></div><div class="user-profile"></div></header>
+                 <div class="content-card">
+                     <div class="card-header"><h2>Unidades de Medida</h2>
+                         <div class="actions-toolbar">
+                            <input type="file" class="file-importer" id="file-importer-unidad-medida" accept=".xlsx" style="display: none;"/>
+                            <button id="btnImportarMedida" class="btn btn-secondary"><i class="fas fa-upload"></i> Importar</button>
+                            <button id="btnNuevoMedida" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo</button>
+                            <input type="text" id="searchMedida" class="search-input" placeholder="Buscar..."><button id="downloadMedida" class="btn btn-secondary"><i class="fas fa-download"></i> Descargar</button>
+                        </div>
+                    </div>
+                    <div class="table-container"><table><thead><tr><th>Código</th><th>Nombre</th><th>Acción</th></tr></thead><tbody id="tableMedida"></tbody></table></div>
+                    <div class="pagination-container" id="pagination-unidad-medida"></div>
+                </div>
+            </main>
+
+            <!-- PÁGINA: CADENAS 9001/9002 -->
+            <main id="page-cadenas-9001" class="main-content page-content">
+                <header class="main-header"><div class="header-title"><h1>Planeamiento</h1><p>Cadenas 9001/9002</p></div><div class="user-profile"></div></header>
+                <div class="content-card">
+                    <div class="card-header"><h2>Cadenas 9001/9002 Registradas</h2>
+                        <div class="actions-toolbar">
+                            <input type="file" class="file-importer" id="file-importer-9001" accept=".xlsx" style="display: none;"/>
+                            <button id="btnImportar9001" class="btn btn-primary"><i class="fas fa-upload"></i> Importar Registros</button>
+                            <input type="text" id="search9001" class="search-input" placeholder="Buscar..."/>
+                            <button id="btnDescargar9001" class="btn btn-secondary"><i class="fas fa-download"></i> Descargar Plantilla</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Código Cat.</th>
+                                    <th>Categoría Presupuestal</th>
+                                    <th>Código Prod.</th>
+                                    <th>Producto</th>
+                                    <th>Código Act.</th>
+                                    <th>Actividad Presupuestal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table9001"></tbody>
+                        </table>
+                    </div>
+                    <div class="pagination-container" id="pagination-9001"></div>
+                </div>
+            </main>
+
+            <!-- PÁGINA: ACTIVIDADES OPERATIVAS -->
+            <main id="page-actividades-operativas" class="main-content page-content">
+                <header class="main-header"><div class="header-title"><h1>Planeamiento</h1><p>Actividades Operativas</p></div><div class="user-profile"></div></header>
+                <div class="content-card">
+                    <div class="card-header"><h2>Listado de Actividades Operativas</h2>
+                        <div class="actions-toolbar">
+                            <input type="text" id="searchAO" class="search-input" placeholder="Buscar por código o nombre...">
+                            <button id="btnNuevaAO" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo Registro</button>
+                        </div>
+                    </div>
+                    <!-- Contenedor para la lista de actividades estilo acordeón -->
+                    <div id="actividades-operativas-container" class="actividades-container">
+                       <!-- El contenido se generará dinámicamente con JS -->
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+ 
+    <!-- ======================= -->
+    <!--         MODALES         -->
+    <!-- ======================= -->
+    
+    <!-- MODAL: UNIDAD -->
+    <div id="modal-unidad" class="modal-overlay">
+        <div class="modal-content"><header class="modal-header"><h2 id="modalUnidadTitle">Registro</h2><button class="close-modal-btn">×</button></header><main class="modal-body"><form id="form-unidad"><div class="form-group"><label>Código</label><input type="text" name="codigo" required></div><div class="form-group"><label>Nombre</label><input type="text" name="nombre" required></div></form></main><footer class="modal-footer"><button type="submit" form="form-unidad" class="btn btn-primary">Grabar</button></footer></div>
+    </div>
+    <!-- MODAL: SUBUNIDAD -->
+    <div id="modal-subunidad" class="modal-overlay">
+        <div class="modal-content"><header class="modal-header"><h2 id="modalSubunidadTitle">Registro</h2><button class="close-modal-btn">×</button></header><main class="modal-body"><form id="form-subunidad"><div class="form-group"><label>Unidad</label><select name="unidadCodigo" required></select></div><div class="form-group"><label>Código</label><input type="text" name="codigo" required></div><div class="form-group"><label>Nombre</label><input type="text" name="nombre" required></div></form></main><footer class="modal-footer"><button type="submit" form="form-subunidad" class="btn btn-primary">Grabar</button></footer></div>
+    </div>
+    <!-- MODAL: CENTRO DE COSTO -->
+    <div id="modal-centro-costo" class="modal-overlay">
+         <div class="modal-content"><header class="modal-header"><h2 id="modalCostoTitle">Registro</h2><button class="close-modal-btn">×</button></header><main class="modal-body"><form id="form-centro-costo"><div class="form-group"><label>Unidad</label><select name="unidad" required></select></div><div class="form-group"><label>Subunidad</label><select name="subunidadCodigo" required></select></div><div class="form-group"><label>Código</label><input type="text" name="codigo" required></div><div class="form-group"><label>Nombre</label><input type="text" name="nombre" required></div></form></main><footer class="modal-footer"><button type="submit" form="form-centro-costo" class="btn btn-primary">Grabar</button></footer></div>
+    </div>
+    <!-- MODAL: USUARIO -->
+    <div id="modal-usuario" class="modal-overlay">
+        <div class="modal-content"><header class="modal-header"><h2 id="modalUsuarioTitle">Registro</h2><button class="close-modal-btn">×</button></header><main class="modal-body"><form id="form-usuario"><div class="form-group"><label>Unidad</label><select name="unidad" required></select></div><div class="form-group"><label>Subunidad</label><select name="subunidad" required></select></div><div class="form-group"><label>Centro de Costo</label><select name="centroCostoCodigo" required></select></div><div class="form-group"><label>Nombre</label><input type="text" name="nombre" required></div><div class="form-group"><label>Usuario (email)</label><input type="email" name="usuario" required></div><div class="form-group"><label>Clave</label><input type="password" name="clave" placeholder="Dejar en blanco para no cambiar"></div><fieldset class="form-group permission-group"><legend>Módulos y Permisos</legend><div id="permissions-container-usuario"></div></fieldset></form></main><footer class="modal-footer"><button type="submit" form="form-usuario" class="btn btn-primary">Grabar</button></footer></div>
+    </div>
+    <!-- MODAL: UNIDAD DE MEDIDA -->
+    <div id="modal-medida" class="modal-overlay">
+         <div class="modal-content"><header class="modal-header"><h2 id="modalMedidaTitle">Registro</h2><button class="close-modal-btn">×</button></header><main class="modal-body"><form id="form-medida"><div class="form-group"><label>Código</label><input type="text" name="codigo" required></div><div class="form-group"><label>Nombre</label><input type="text" name="nombre" required></div></form></main><footer class="modal-footer"><button type="submit" form="form-medida" class="btn btn-primary">Grabar</button></footer></div>
+    </div>
+    <!-- MODAL: OEI -->
+    <div id="modal-oei" class="modal-overlay">
+        <div class="modal-content"><header class="modal-header"><h2 id="modalOeiTitle">Registro</h2><button class="close-modal-btn">×</button></header><main class="modal-body"><form id="form-oei"><div class="form-group"><label>Plan Estratégico</label><select name="planId" required></select></div><div class="form-group"><label>Código</label><input type="text" name="codigo" required></div><div class="form-group"><label>Denominación</label><input type="text" name="nombre" required></div></form></main><footer class="modal-footer"><button type="submit" form="form-oei" class="btn btn-primary">Grabar</button></footer></div>
+    </div>
+    <!-- MODAL: AEI -->
+    <div id="modal-aei" class="modal-overlay">
+        <div class="modal-content"><header class="modal-header"><h2 id="modalAeiTitle">Registro</h2><button class="close-modal-btn">×</button></header><main class="modal-body"><form id="form-aei"><div class="form-group"><label>Objetivo Estratégico</label><select name="oeiCodigo" required></select></div><div class="form-group"><label>Código</label><input type="text" name="codigo" required></div><div class="form-group"><label>Denominación</label><input type="text" name="nombre" required></div></form></main><footer class="modal-footer"><button type="submit" form="form-aei" class="btn btn-primary">Grabar</button></footer></div>
+    </div>
+    <!-- MODAL: ACTIVIDAD OPERATIVA -->
+    <div id="modal-actividad-operativa" class="modal-overlay">
+        <div class="modal-content" style="max-width: 800px;">
+            <header class="modal-header">
+                <h2 id="modalAOTitle">Registrar Actividad Operativa</h2>
+                <button class="close-modal-btn">×</button>
+            </header>
+            <main class="modal-body">
+                <form id="form-actividad-operativa" novalidate>
+                    <div class="form-group"><label>¿Pertenece a un Programa Presupuestal?</label><div class="radio-group"><label><input type="radio" name="pertenecePrograma" value="si" required> Sí</label><label style="margin-left: 2rem;"><input type="radio" name="pertenecePrograma" value="no" required> No</label></div></div>
+                    <div class="form-row"><div class="form-group"><label for="ao-accion-estrategica">Acción Estratégica</label><select id="ao-accion-estrategica" name="accionEstrategicaId" required></select></div><div class="form-group"><label for="ao-codigo">Código AO</label><input type="text" id="ao-codigo" name="codigo" placeholder="(Automático)" readonly></div></div>
+                    <fieldset id="fieldset-fuente-datos" disabled><legend>Datos de Cadena Funcional</legend><div class="form-row"><div class="form-group"><label for="ao-categoria">Categoría</label><select id="ao-categoria" name="categoria" required></select></div><div class="form-group"><label for="ao-producto">Producto</label><select id="ao-producto" name="producto" required></select></div></div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="ao-actividad">Actividad Pptal</label>
+                                <select id="ao-actividad" name="actividad" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ao-actividad-operativa-select">Actividad Operativa (Subproducto)</label>
+                                <!-- Contenedor para el campo dinámico -->
+                                <div id="subproducto-container">
+                                    <!-- Dropdown para Programa Presupuestal (Sí) -->
+                                    <select id="ao-actividad-operativa-select" name="fuenteCadenaId" class="dynamic-subproducto" required>
+                                        <!-- Opciones se llenarán con JS -->
+                                    </select>
+                                    <!-- Campo de texto para Acciones Centrales (No) -->
+                                    <input type="text" id="ao-actividad-operativa-input" name="nombreActividad" class="dynamic-subproducto" style="display: none;" placeholder="Redacte el nombre de la actividad...">
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <div class="form-group"><label for="ao-unidad-medida">Unidad de Medida</label><select id="ao-unidad-medida" name="unidadMedidaId" required></select></div>
+                </form>
+            </main>
+            <footer class="modal-footer"><button type="submit" form="form-actividad-operativa" class="btn btn-primary">Grabar</button></footer>
+        </div>
+    </div>    
+    
+    <!-- CONTENEDOR PARA NOTIFICACIONES TOAST -->
+    <div id="toast-container"></div>
+
+    <!-- SCRIPT PRINCIPAL DE LA APLICACIÓN -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

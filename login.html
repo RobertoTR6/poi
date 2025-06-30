@@ -1,0 +1,40 @@
+<!-- --- START OF FILE login.html (MODIFICADO) --- -->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Sistema de Gestión</title>
+    
+    <!-- 1. Cargar la hoja de estilos principal que contiene las variables CSS (:root) -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- 2. Cargar la hoja de estilos específica para el login, que usará las variables ya definidas -->
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+    <div class="login-container">
+        <form class="login-form" id="loginForm">
+            <div class="login-header">
+                <img src="https://webservices.insnsb.gob.pe/mpd/Images/logoINSN.png" alt="Logo" class="logo" style="background: #ffffff; padding: 5px; border-radius: 4px;">
+                <h2>Iniciar Sesión</h2>
+                <p>Bienvenido al Sistema Integrado Administrativo (SIA)</p>
+            </div>
+            <div class="form-group">
+                <label for="username">Usuario (email)</label>
+                <input type="email" id="username" value="admin@insnsb.gob.pe" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Clave</label>
+                <input type="password" id="password" value="admin" required>
+            </div>
+            <p id="errorMessage" class="error-message"></p>
+            <button type="submit" class="btn-login">Ingresar</button>
+        </form>
+    </div>
+
+    <!-- 3. Añadido type="module" para permitir el uso de `import` en login.js -->
+    <script type="module" src="js/login.js"></script>
+</body>
+</html>
